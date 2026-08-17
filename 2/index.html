@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facebook Ads Metrics Calculator</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --primary:#1877f2; --border:#e4e7ec; --good:#12b76a;
+  --warn:#f79009; --bad:#f04438;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.container{max-width:1100px;margin:auto;padding:32px 18px}
+.header{text-align:center;margin-bottom:28px}
+.header h1{margin:0 0 8px;font-size:32px}
+.header p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 4px 18px rgba(16,24,40,.05)}
+.card h2{font-size:19px;margin:0 0 18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.field input,.field select{width:100%;padding:11px 12px;border:1px solid #d0d5dd;border-radius:9px;font-size:14px;outline:none;background:#fff}
+.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(24,119,242,.12)}
+.full{grid-column:1/-1}
+button{width:100%;border:0;border-radius:10px;padding:13px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+button:hover{filter:brightness(.95)}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.metric{border:1px solid var(--border);border-radius:12px;padding:15px;background:#fff}
+.metric .name{font-size:12px;color:var(--muted);margin-bottom:7px}
+.metric .value{font-size:22px;font-weight:750}
+.status{margin-top:18px;border-radius:12px;padding:17px;border-left:5px solid var(--good);background:#ecfdf3}
+.status.warn{border-color:var(--warn);background:#fffaeb}
+.status.bad{border-color:var(--bad);background:#fef3f2}
+.status h3{margin:0 0 6px;font-size:18px}
+.status p{margin:0;color:#475467;line-height:1.55}
+.analysis{margin-top:18px}
+.analysis-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);line-height:1.5}
+.analysis-item:last-child{border-bottom:0}
+.badge{min-width:72px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:11px;font-weight:700}
+.good{background:#dcfae6;color:#067647}
+.attention{background:#fef0c7;color:#b54708}
+.problem{background:#fee4e2;color:#b42318}
+.tip{margin-top:18px;padding:15px;border-radius:12px;background:#f2f4f7;color:#475467;font-size:13px;line-height:1.55}
+.reset{background:#344054;margin-top:9px}
+.small{font-size:12px;color:var(--muted);margin-top:7px}
+@media(max-width:800px){
+  .grid{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .form-grid,.results{grid-template-columns:1fr}.header h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Facebook Ads Metrics Calculator</h1>
+    <p>Enter your Facebook Ads data and get calculated metrics + basic performance analysis.</p>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Ads Data Comparison</h2>
+
+      <div class="form-grid">
+        <div class="field full">
+          <label>Campaign Type</label>
+          <select id="campaignType">
+            <option value="cold">Cold / Prospecting</option>
+            <option value="retargeting">Retargeting</option>
+          </select>
+        </div>
+      </div>
+
+      <h3 style="font-size:15px;margin:20px 0 12px">Previous Period</h3>
+      <div class="form-grid">
+        <div class="field"><label>Spend ($)</label><input id="p_spend" type="number" min="0" step="0.01" placeholder="5"></div>
+        <div class="field"><label>Reach</label><input id="p_reach" type="number" min="0" placeholder="5000"></div>
+        <div class="field"><label>Impressions</label><input id="p_impressions" type="number" min="0" placeholder="12000"></div>
+        <div class="field"><label>Link Clicks</label><input id="p_clicks" type="number" min="0" placeholder="180"></div>
+        <div class="field"><label>Results / Conversions</label><input id="p_results" type="number" min="0" placeholder="10"></div>
+        <div class="field"><label>Revenue ($) <span class="small">optional</span></label><input id="p_revenue" type="number" min="0" step="0.01" placeholder="30"></div>
+      </div>
+
+      <h3 style="font-size:15px;margin:20px 0 12px">Current Period</h3>
+      <div class="form-grid">
+        <div class="field"><label>Spend ($)</label><input id="c_spend" type="number" min="0" step="0.01" placeholder="5"></div>
+        <div class="field"><label>Reach</label><input id="c_reach" type="number" min="0" placeholder="8500"></div>
+        <div class="field"><label>Impressions</label><input id="c_impressions" type="number" min="0" placeholder="32000"></div>
+        <div class="field"><label>Link Clicks</label><input id="c_clicks" type="number" min="0" placeholder="384"></div>
+        <div class="field"><label>Results / Conversions</label><input id="c_results" type="number" min="0" placeholder="18"></div>
+        <div class="field"><label>Revenue ($) <span class="small">optional</span></label><input id="c_revenue" type="number" min="0" step="0.01" placeholder="50"></div>
+      </div>
+
+      <button onclick="calculate()">Analyze Performance</button>
+      <button class="reset" onclick="resetForm()">Reset</button>
+
+      <div class="tip">
+        <strong>How to use:</strong> Enter data from two comparable periods, such as
+        <strong>Last 3 days vs Current 3 days</strong>. Use the same campaign/ad set when possible.
+        The tool will calculate both periods and explain the direction of change.
+      </div>
+    </section>
+    </section>
+
+    <section class="card">
+      <h2>Performance Analysis</h2>
+
+      <div id="overall" class="status" style="display:none">
+        <h3 id="overallTitle"></h3>
+        <p id="overallText"></p>
+      </div>
+
+      <h3 style="font-size:16px;margin:20px 0 12px">Current Metrics</h3>
+      <div class="results">
+        <div class="metric"><div class="name">Frequency</div><div class="value" id="frequency">—</div></div>
+        <div class="metric"><div class="name">CPM</div><div class="value" id="cpm">—</div></div>
+        <div class="metric"><div class="name">CTR</div><div class="value" id="ctr">—</div></div>
+        <div class="metric"><div class="name">CPC</div><div class="value" id="cpc">—</div></div>
+        <div class="metric"><div class="name">Conversion Rate</div><div class="value" id="cvr">—</div></div>
+        <div class="metric"><div class="name">Cost / Result</div><div class="value" id="cpr">—</div></div>
+        <div class="metric"><div class="name">ROAS</div><div class="value" id="roas">—</div></div>
+      </div>
+
+      <h3 style="font-size:16px;margin:22px 0 12px">Metric Changes</h3>
+      <div id="comparisonTable"></div>
+
+      <div class="analysis">
+        <h2>Smart Analysis</h2>
+        <div id="analysisList">
+          <div class="small">Enter both periods and click Analyze Performance.</div>
+        </div>
+      </div>
+    </section>
+    </section>
+  </div>
+</div>
+
+<script>
+function num(id){
+  const v=parseFloat(document.getElementById(id).value);
+  return Number.isFinite(v)&&v>=0?v:0;
+}
+function money(v){return Number.isFinite(v)?"$"+v.toFixed(2):"—";}
+function pct(v){return Number.isFinite(v)?v.toFixed(2)+"%":"—";}
+function val(v){return Number.isFinite(v)?v:NaN;}
+
+function getData(prefix){
+  const spend=num(prefix+"_spend"), reach=num(prefix+"_reach"), imp=num(prefix+"_impressions");
+  const clicks=num(prefix+"_clicks"), results=num(prefix+"_results"), revenue=num(prefix+"_revenue");
+  return {
+    spend,reach,imp,clicks,results,revenue,
+    frequency: reach?imp/reach:NaN,
+    cpm: imp?spend/imp*1000:NaN,
+    ctr: imp?clicks/imp*100:NaN,
+    cpc: clicks?spend/clicks:NaN,
+    cvr: clicks?results/clicks*100:NaN,
+    cpr: results?spend/results:NaN,
+    roas: spend&&revenue?revenue/spend:NaN
+  };
+}
+
+function changePct(current,previous){
+  if(!Number.isFinite(current)||!Number.isFinite(previous)||previous===0)return NaN;
+  return ((current-previous)/previous)*100;
+}
+function arrow(change){return change>0?"↑":change<0?"↓":"→";}
+function changeText(current,previous,inverse=false){
+  const ch=changePct(current,previous);
+  if(!Number.isFinite(ch))return "No comparable data";
+  return `${arrow(ch)} ${Math.abs(ch).toFixed(1)}%`;
+}
+
+function calculate(){
+  const p=getData("p"), c=getData("c");
+  const type=document.getElementById("campaignType").value;
+
+  document.getElementById("frequency").textContent=Number.isFinite(c.frequency)?c.frequency.toFixed(2):"—";
+  document.getElementById("cpm").textContent=money(c.cpm);
+  document.getElementById("ctr").textContent=pct(c.ctr);
+  document.getElementById("cpc").textContent=money(c.cpc);
+  document.getElementById("cvr").textContent=pct(c.cvr);
+  document.getElementById("cpr").textContent=money(c.cpr);
+  document.getElementById("roas").textContent=Number.isFinite(c.roas)?c.roas.toFixed(2)+"x":"—";
+
+  const metrics=[
+    ["Frequency","frequency",2],
+    ["CPM","cpm",2],
+    ["CTR","ctr",2],
+    ["CPC","cpc",2],
+    ["Conversion Rate","cvr",2],
+    ["Cost / Result","cpr",2],
+    ["ROAS","roas",2]
+  ];
+
+  let table=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+  <thead><tr style="text-align:left;border-bottom:1px solid #e4e7ec">
+  <th style="padding:10px 6px">Metric</th><th style="padding:10px 6px">Previous</th>
+  <th style="padding:10px 6px">Current</th><th style="padding:10px 6px">Change</th></tr></thead><tbody>`;
+
+  metrics.forEach(([name,key])=>{
+    const pv=p[key], cv=c[key], ch=changePct(cv,pv);
+    let currentDisplay = key==="frequency"?(Number.isFinite(cv)?cv.toFixed(2):"—"):
+      key==="cpm"||key==="cpc"||key==="cpr"?money(cv):
+      key==="roas"?(Number.isFinite(cv)?cv.toFixed(2)+"x":"—"):pct(cv);
+    let prevDisplay = key==="frequency"?(Number.isFinite(pv)?pv.toFixed(2):"—"):
+      key==="cpm"||key==="cpc"||key==="cpr"?money(pv):
+      key==="roas"?(Number.isFinite(pv)?pv.toFixed(2)+"x":"—"):pct(pv);
+    let cls="color:#475467";
+    if(Number.isFinite(ch)){
+      const positive = ["ctr","cvr","roas"].includes(key) ? ch>0 : ch<0;
+      const negative = ["ctr","cvr","roas"].includes(key) ? ch<0 : ch>0;
+      cls=positive?"color:#067647;font-weight:700":negative?"color:#b42318;font-weight:700":"color:#475467";
+    }
+    table+=`<tr style="border-bottom:1px solid #f0f2f5">
+      <td style="padding:10px 6px;font-weight:600">${name}</td>
+      <td style="padding:10px 6px">${prevDisplay}</td>
+      <td style="padding:10px 6px">${currentDisplay}</td>
+      <td style="padding:10px 6px;${cls}">${changeText(cv,pv)}</td>
+    </tr>`;
+  });
+  table+="</tbody></table></div>";
+  document.getElementById("comparisonTable").innerHTML=table;
+
+  const analysis=[];
+  let score=0;
+
+  // Frequency + CTR + CPR combined fatigue logic
+  const freqCh=changePct(c.frequency,p.frequency);
+  const ctrCh=changePct(c.ctr,p.ctr);
+  const cprCh=changePct(c.cpr,p.cpr);
+
+  if(Number.isFinite(freqCh)&&Number.isFinite(ctrCh)&&Number.isFinite(cprCh)){
+    if(freqCh>=15 && ctrCh<=-15 && cprCh>=15){
+      analysis.push(["PROBLEM","Possible Ad Fatigue",
+        `Frequency increased ${Math.abs(freqCh).toFixed(1)}%, while CTR fell ${Math.abs(ctrCh).toFixed(1)}% and Cost per Result increased ${Math.abs(cprCh).toFixed(1)}%. This is a strong fatigue signal.`]);
+      score-=3;
+    } else if(freqCh>=15 && ctrCh<0){
+      analysis.push(["ATTENTION","Exposure Increasing",
+        `Frequency increased ${Math.abs(freqCh).toFixed(1)}%. CTR also moved down, so monitor the next few days for fatigue.`]);
+      score--;
+    } else if(freqCh>=15 && ctrCh>=-5 && cprCh<=10){
+      analysis.push(["GOOD","Frequency Under Control",
+        `Frequency increased ${Math.abs(freqCh).toFixed(1)}%, but CTR and Cost per Result have not deteriorated significantly. Keep monitoring.`]);
+      score++;
+    }
+  }
+
+  // CTR
+  if(Number.isFinite(ctrCh)){
+    if(ctrCh>=15){analysis.push(["GOOD","CTR Improved",`CTR improved ${ctrCh.toFixed(1)}%. Your creative is generating stronger click response.`]);score++;}
+    else if(ctrCh<=-15){analysis.push(["PROBLEM","CTR Dropped",`CTR dropped ${Math.abs(ctrCh).toFixed(1)}%. Test a new hook, thumbnail/visual, copy or offer.`]);score--;}
+    else analysis.push(["ATTENTION","CTR Stable",`CTR changed ${ctrCh.toFixed(1)}%. There is no major CTR movement yet.`]);
+  }
+
+  // CPC
+  const cpcCh=changePct(c.cpc,p.cpc);
+  if(Number.isFinite(cpcCh)){
+    if(cpcCh<=-15){analysis.push(["GOOD","CPC Improved",`CPC decreased ${Math.abs(cpcCh).toFixed(1)}%. You are getting clicks more efficiently.`]);score++;}
+    else if(cpcCh>=20){analysis.push(["PROBLEM","CPC Increased",`CPC increased ${cpcCh.toFixed(1)}%. Check whether CTR dropped or CPM increased.`]);score--;}
+    else analysis.push(["ATTENTION","CPC",`CPC changed ${cpcCh.toFixed(1)}%. Monitor together with CTR.`]);
+  }
+
+  // CPA / Cost per result
+  if(Number.isFinite(cprCh)){
+    if(cprCh<=-15){analysis.push(["GOOD","Cost per Result Improved",`Cost per Result decreased ${Math.abs(cprCh).toFixed(1)}%. Your results became cheaper.`]);score++;}
+    else if(cprCh>=20){analysis.push(["PROBLEM","Cost per Result Increased",`Cost per Result increased ${cprCh.toFixed(1)}%. Review creative, audience, offer and conversion process.`]);score--;}
+    else analysis.push(["ATTENTION","Cost per Result",`Cost per Result changed ${cprCh.toFixed(1)}%. No major movement yet.`]);
+  }
+
+  // CPM
+  const cpmCh=changePct(c.cpm,p.cpm);
+  if(Number.isFinite(cpmCh)&&cpmCh>=20){
+    analysis.push(["ATTENTION","CPM Increased",`CPM increased ${cpmCh.toFixed(1)}%. Auction competition, audience quality or delivery changes may be affecting cost.`]);
+  }
+
+  // Conversion rate
+  const cvrCh=changePct(c.cvr,p.cvr);
+  if(Number.isFinite(cvrCh)){
+    if(cvrCh>=15){analysis.push(["GOOD","Conversion Rate Improved",`Conversion Rate improved ${cvrCh.toFixed(1)}%. Traffic is converting better.`]);score++;}
+    else if(cvrCh<=-15){analysis.push(["PROBLEM","Conversion Rate Dropped",`Conversion Rate fell ${Math.abs(cvrCh).toFixed(1)}%. Check offer, landing page, checkout or sales process.`]);score--;}
+  }
+
+  // ROAS
+  const roasCh=changePct(c.roas,p.roas);
+  if(Number.isFinite(roasCh)){
+    if(roasCh>=15){analysis.push(["GOOD","ROAS Improved",`ROAS improved ${roasCh.toFixed(1)}%. Revenue efficiency is better.`]);score++;}
+    else if(roasCh<=-15){analysis.push(["PROBLEM","ROAS Dropped",`ROAS dropped ${Math.abs(roasCh).toFixed(1)}%. Review CPA, conversion rate and average order value.`]);score--;}
+  }
+
+  // Baseline benchmarks for current data
+  if(Number.isFinite(c.frequency)){
+    const goodMax=type==="retargeting"?5:3, warnMax=type==="retargeting"?8:5;
+    if(c.frequency>warnMax) analysis.push(["PROBLEM","High Frequency",`Current Frequency is ${c.frequency.toFixed(2)}. Audience may be overexposed; check audience size and creative fatigue.`]);
+    else if(c.frequency>goodMax) analysis.push(["ATTENTION","Frequency",`Current Frequency is ${c.frequency.toFixed(2)}. Monitor CTR and Cost per Result closely.`]);
+  }
+
+  const overall=document.getElementById("overall");
+  overall.style.display="block";
+  overall.className="status";
+  let title="🟢 HEALTHY TREND";
+  let text="Current performance is broadly stable or improving versus the previous period.";
+  if(score<=-3){
+    overall.className="status bad";
+    title="🔴 ACTION REQUIRED";
+    text="Several important metrics deteriorated. Avoid increasing budget until you identify and test the likely cause.";
+  } else if(score<1){
+    overall.className="status warn";
+    title="🟡 NEEDS ATTENTION";
+    text="There are mixed signals. Keep monitoring the trend and test the metric connected to the biggest deterioration.";
+  }
+  document.getElementById("overallTitle").textContent=title;
+  document.getElementById("overallText").textContent=text;
+
+  document.getElementById("analysisList").innerHTML=analysis.length ? analysis.map(x=>`
+    <div class="analysis-item">
+      <span class="badge ${x[0]==="GOOD"?"good":x[0]==="ATTENTION"?"attention":"problem"}">${x[0]}</span>
+      <div><strong>${x[1]}</strong><br>${x[2]}</div>
+    </div>`).join("") :
+    '<div class="small">Not enough comparable data for smart analysis.</div>';
+}
+
+function resetForm(){
+  document.querySelectorAll("input").forEach(el=>el.value="");
+  document.getElementById("campaignType").value="cold";
+  ["frequency","cpm","ctr","cpc","cvr","cpr","roas"].forEach(id=>document.getElementById(id).textContent="—");
+  document.getElementById("overall").style.display="none";
+  document.getElementById("comparisonTable").innerHTML="";
+  document.getElementById("analysisList").innerHTML='<div class="small">Enter both periods and click Analyze Performance.</div>';
+}
+</script>
+</body>
+</html>
