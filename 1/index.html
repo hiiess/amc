@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facebook Ads Metrics Calculator</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --primary:#1877f2; --border:#e4e7ec; --good:#12b76a;
+  --warn:#f79009; --bad:#f04438;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.container{max-width:1100px;margin:auto;padding:32px 18px}
+.header{text-align:center;margin-bottom:28px}
+.header h1{margin:0 0 8px;font-size:32px}
+.header p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 4px 18px rgba(16,24,40,.05)}
+.card h2{font-size:19px;margin:0 0 18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.field input,.field select{width:100%;padding:11px 12px;border:1px solid #d0d5dd;border-radius:9px;font-size:14px;outline:none;background:#fff}
+.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(24,119,242,.12)}
+.full{grid-column:1/-1}
+button{width:100%;border:0;border-radius:10px;padding:13px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+button:hover{filter:brightness(.95)}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.metric{border:1px solid var(--border);border-radius:12px;padding:15px;background:#fff}
+.metric .name{font-size:12px;color:var(--muted);margin-bottom:7px}
+.metric .value{font-size:22px;font-weight:750}
+.status{margin-top:18px;border-radius:12px;padding:17px;border-left:5px solid var(--good);background:#ecfdf3}
+.status.warn{border-color:var(--warn);background:#fffaeb}
+.status.bad{border-color:var(--bad);background:#fef3f2}
+.status h3{margin:0 0 6px;font-size:18px}
+.status p{margin:0;color:#475467;line-height:1.55}
+.analysis{margin-top:18px}
+.analysis-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);line-height:1.5}
+.analysis-item:last-child{border-bottom:0}
+.badge{min-width:72px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:11px;font-weight:700}
+.good{background:#dcfae6;color:#067647}
+.attention{background:#fef0c7;color:#b54708}
+.problem{background:#fee4e2;color:#b42318}
+.tip{margin-top:18px;padding:15px;border-radius:12px;background:#f2f4f7;color:#475467;font-size:13px;line-height:1.55}
+.reset{background:#344054;margin-top:9px}
+.small{font-size:12px;color:var(--muted);margin-top:7px}
+@media(max-width:800px){
+  .grid{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .form-grid,.results{grid-template-columns:1fr}.header h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Facebook Ads Metrics Calculator</h1>
+    <p>Enter your Facebook Ads data and get calculated metrics + basic performance analysis.</p>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Ads Data</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label>Spend ($)</label>
+          <input id="spend" type="number" min="0" step="0.01" placeholder="5">
+        </div>
+        <div class="field">
+          <label>Reach</label>
+          <input id="reach" type="number" min="0" placeholder="8500">
+        </div>
+        <div class="field">
+          <label>Impressions</label>
+          <input id="impressions" type="number" min="0" placeholder="32000">
+        </div>
+        <div class="field">
+          <label>Link Clicks</label>
+          <input id="clicks" type="number" min="0" placeholder="384">
+        </div>
+        <div class="field">
+          <label>Results / Conversions</label>
+          <input id="results" type="number" min="0" placeholder="18">
+        </div>
+        <div class="field">
+          <label>Revenue ($) <span class="small">optional</span></label>
+          <input id="revenue" type="number" min="0" step="0.01" placeholder="50">
+        </div>
+        <div class="field full">
+          <label>Campaign Type</label>
+          <select id="campaignType">
+            <option value="cold">Cold / Prospecting</option>
+            <option value="retargeting">Retargeting</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="calculate()">Calculate Metrics</button>
+      <button class="reset" onclick="resetForm()">Reset</button>
+      <div class="tip">
+        <strong>Tip:</strong> For the most useful analysis, enter Spend, Reach, Impressions,
+        Link Clicks and Results. Revenue is optional and enables ROAS.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Calculated Metrics</h2>
+      <div class="results">
+        <div class="metric"><div class="name">Frequency</div><div class="value" id="frequency">—</div></div>
+        <div class="metric"><div class="name">CPM</div><div class="value" id="cpm">—</div></div>
+        <div class="metric"><div class="name">CTR</div><div class="value" id="ctr">—</div></div>
+        <div class="metric"><div class="name">CPC</div><div class="value" id="cpc">—</div></div>
+        <div class="metric"><div class="name">Conversion Rate</div><div class="value" id="cvr">—</div></div>
+        <div class="metric"><div class="name">Cost / Result</div><div class="value" id="cpr">—</div></div>
+        <div class="metric"><div class="name">ROAS</div><div class="value" id="roas">—</div></div>
+      </div>
+
+      <div id="overall" class="status" style="display:none">
+        <h3 id="overallTitle"></h3>
+        <p id="overallText"></p>
+      </div>
+
+      <div class="analysis">
+        <h2>Quick Analysis</h2>
+        <div id="analysisList">
+          <div class="small">Enter your data and click Calculate Metrics.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+function num(id){
+  const v = parseFloat(document.getElementById(id).value);
+  return Number.isFinite(v) && v >= 0 ? v : 0;
+}
+function money(v){ return Number.isFinite(v) ? "$" + v.toFixed(2) : "—"; }
+function pct(v){ return Number.isFinite(v) ? v.toFixed(2) + "%" : "—"; }
+
+function calculate(){
+  const spend=num("spend"), reach=num("reach"), imp=num("impressions");
+  const clicks=num("clicks"), results=num("results"), revenue=num("revenue");
+  const type=document.getElementById("campaignType").value;
+
+  const frequency = reach ? imp/reach : NaN;
+  const cpm = imp ? spend/imp*1000 : NaN;
+  const ctr = imp ? clicks/imp*100 : NaN;
+  const cpc = clicks ? spend/clicks : NaN;
+  const cvr = clicks ? results/clicks*100 : NaN;
+  const cpr = results ? spend/results : NaN;
+  const roas = spend && revenue ? revenue/spend : NaN;
+
+  document.getElementById("frequency").textContent = Number.isFinite(frequency)?frequency.toFixed(2):"—";
+  document.getElementById("cpm").textContent = money(cpm);
+  document.getElementById("ctr").textContent = pct(ctr);
+  document.getElementById("cpc").textContent = money(cpc);
+  document.getElementById("cvr").textContent = pct(cvr);
+  document.getElementById("cpr").textContent = money(cpr);
+  document.getElementById("roas").textContent = Number.isFinite(roas)?roas.toFixed(2)+"x":"—";
+
+  const items=[];
+  let score=0;
+
+  // Frequency
+  if(Number.isFinite(frequency)){
+    const goodMax = type==="retargeting" ? 5 : 3;
+    const warnMax = type==="retargeting" ? 8 : 5;
+    if(frequency <= goodMax){
+      items.push(["GOOD","Frequency",`Frequency ${frequency.toFixed(2)} — ${type==="retargeting"?"retargeting-এর জন্য":"cold audience-এর জন্য"} সাধারণত acceptable range-এ আছে.`]);
+      score++;
+    } else if(frequency <= warnMax){
+      items.push(["ATTENTION","Frequency",`Frequency ${frequency.toFixed(2)} — audience exposure বাড়ছে। CTR/CPA monitor করুন.`]);
+    } else {
+      items.push(["PROBLEM","Frequency",`Frequency ${frequency.toFixed(2)} — ad fatigue বা audience ছোট হওয়ার সম্ভাবনা আছে.`]);
+      score--;
+    }
+  }
+
+  // CTR
+  if(Number.isFinite(ctr)){
+    if(ctr >= 2){
+      items.push(["GOOD","CTR",`CTR ${pct(ctr)} — creative/hook ভালো response পাচ্ছে.`]); score++;
+    } else if(ctr >= 1){
+      items.push(["ATTENTION","CTR",`CTR ${pct(ctr)} — acceptable, তবে stronger hook/creative test করা যেতে পারে.`]);
+    } else {
+      items.push(["PROBLEM","CTR",`CTR ${pct(ctr)} — click-through response কম। Creative, hook বা offer review করুন.`]); score--;
+    }
+  }
+
+  // CPC
+  if(Number.isFinite(cpc)){
+    if(cpc <= 0.30){
+      items.push(["GOOD","CPC",`CPC ${money(cpc)} — click cost ভালো.`]); score++;
+    } else if(cpc <= 0.75){
+      items.push(["ATTENTION","CPC",`CPC ${money(cpc)} — cost monitor করুন এবং CTR improve করার চেষ্টা করুন.`]);
+    } else {
+      items.push(["PROBLEM","CPC",`CPC ${money(cpc)} — click cost বেশি। CTR/creative issue খুঁজুন.`]); score--;
+    }
+  }
+
+  // Conversion rate
+  if(Number.isFinite(cvr)){
+    if(cvr >= 5){
+      items.push(["GOOD","Conversion",`Conversion Rate ${pct(cvr)} — click থেকে result conversion ভালো.`]); score++;
+    } else if(cvr >= 2){
+      items.push(["ATTENTION","Conversion",`Conversion Rate ${pct(cvr)} — offer, landing page বা sales process optimize করা যেতে পারে.`]);
+    } else {
+      items.push(["PROBLEM","Conversion",`Conversion Rate ${pct(cvr)} — clicks আসছে কিন্তু result কম। Offer/landing page/sales process check করুন.`]); score--;
+    }
+  }
+
+  // ROAS
+  if(Number.isFinite(roas)){
+    if(roas >= 3){
+      items.push(["GOOD","ROAS",`ROAS ${roas.toFixed(2)}x — revenue return strong.`]); score++;
+    } else if(roas >= 1){
+      items.push(["ATTENTION","ROAS",`ROAS ${roas.toFixed(2)}x — revenue spend-এর চেয়ে বেশি, তবে profit margin check করুন.`]);
+    } else {
+      items.push(["PROBLEM","ROAS",`ROAS ${roas.toFixed(2)}x — ad spend revenue-এর চেয়ে বেশি.`]); score--;
+    }
+  }
+
+  // Overall
+  const overall=document.getElementById("overall");
+  overall.style.display="block";
+  overall.className="status";
+  let title="🟢 GOOD — Performance looks healthy";
+  let text="Most of the entered metrics are within the basic benchmark ranges. Continue monitoring trends rather than judging from one snapshot.";
+  if(score <= -2){
+    overall.className="status bad";
+    title="🔴 NEEDS ACTION — Performance has warning signs";
+    text="Multiple metrics are showing weakness. Review creative, audience, offer and conversion flow before increasing budget.";
+  } else if(score <= 1){
+    overall.className="status warn";
+    title="🟡 NEEDS ATTENTION — Monitor and optimize";
+    text="Some metrics are okay, but there are areas worth testing. Avoid making a decision from Frequency alone.";
+  }
+  document.getElementById("overallTitle").textContent=title;
+  document.getElementById("overallText").textContent=text;
+
+  document.getElementById("analysisList").innerHTML=items.map(x=>`
+    <div class="analysis-item">
+      <span class="badge ${x[0]==="GOOD"?"good":x[0]==="ATTENTION"?"attention":"problem"}">${x[0]}</span>
+      <div><strong>${x[1]}</strong><br>${x[2]}</div>
+    </div>
+  `).join("");
+}
+
+function resetForm(){
+  ["spend","reach","impressions","clicks","results","revenue"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("campaignType").value="cold";
+  ["frequency","cpm","ctr","cpc","cvr","cpr","roas"].forEach(id=>document.getElementById(id).textContent="—");
+  document.getElementById("overall").style.display="none";
+  document.getElementById("analysisList").innerHTML='<div class="small">Enter your data and click Calculate Metrics.</div>';
+}
+</script>
+</body>
+</html>
